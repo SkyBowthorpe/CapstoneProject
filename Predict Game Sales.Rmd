@@ -1,7 +1,7 @@
 ---
 title: "Predict Game Sales Project"
 author: "Skyler Bowthorpe"
-date: "11/24/2019"
+date: "3/9/2020"
 output: pdf_document
 ---
 
@@ -11,7 +11,8 @@ This report is a capstone project for the Data Science: Capstone course on the e
 First this script sets up the necessary libraries and imports the dataset.  I will include the CSV file in the GetHub repository.
 
 
-```{r setup and introduction, include=FALSE}
+```{r setup and introduction, include=TRUE}
+tinytex::reinstall_tinytex()
 knitr::opts_chunk$set(echo = TRUE)
 options(tinytex.verbose = TRUE)
 #Introduction
@@ -103,26 +104,24 @@ ggplot(arrange_by_rev2,aes(Genre,Global_Sales))+
 head(dat %>% filter(Genre == "Misc"), n = 10)
 #Misc includes party, music and learning type games.
 
+# For more clarity I will categorize the platforms into major companies
+# New generatoins of game systems replace the old every few years.
+dat$Platform_company <- as.character(dat$Platform)
+dat$Platform_company[dat$Platform_company %in% c("PS","PS2","PS3","PS4","PSP","PSV","DC")] <- "Sony"
+dat$Platform_company[dat$Platform_company %in% c("XB","XOne","X360")] <- "Microsoft"
+dat$Platform_company[dat$Platform_company %in% c("Wii","NES","GB","DS","SNES","GBA","3DS","N64","WiiU", "GC")] <- "Nintendo"
+dat$Platform_company[!(dat$Platform_company  %in% c("Nintendo","Sony","Microsoft"))] <- "Other"
+dat$Platform_company <- as.factor(dat$Platform_company)
+
 #charts comparing platfoms
-ggplot(dat, aes(Platform,Global_Sales,fill=Platform))+
+ggplot(dat, aes(Platform,Global_Sales,fill=Platform_company))+
   geom_bar(stat="identity")+
   xlab("Platform")+
   ylab("Global Sales")+
   ggtitle("Global Sales by Platform")
 
-# For more clarity I will categorize the platforms into major companies
-# New generatoins of game systems replace the old every few years.
-dat$Platform <- as.character(dat$Platform)
-dat$Platform[dat$Platform %in% c("PS","PS2","PS3","PS4","PSP","PSV")] <- "Sony"
-dat$Platform[dat$Platform %in% c("XB","XOne","X360")] <- "Microsoft"
-dat$Platform[dat$Platform %in% c("Wii","NES","GB","DS",
-                                 "SNES","GBA","3DS","N64",
-                                 "GC","WiiU")] <- "Nintendo"
-dat$Platform[!(dat$Platform  %in% c("Nintendo","Sony","Microsoft"))] <- "Other"
-dat$Platform <- as.factor(dat$Platform)
-
 #Much cleaner chart comparing platform companies.
-ggplot(dat, aes(Platform,Global_Sales,fill=Platform))+
+ggplot(dat, aes(Platform_company,Global_Sales,fill=Platform_company))+
   geom_bar(stat="identity")+
   xlab("Platform")+
   ylab("Global Sales")+
@@ -132,7 +131,7 @@ ggplot(dat, aes(Platform,Global_Sales,fill=Platform))+
 top_publishers <- aggregate(Global_Sales~Publisher,dat,mean) #average of game sales per publisher
 arrange_by_rev3 <- arrange(top_publishers,desc(Global_Sales))
 arrange_by_rev3$Publisher = factor(arrange_by_rev3$Publisher, levels = arrange_by_rev3$Publisher)
-ggplot(head(arrange_by_rev3,10),aes(Publisher,Global_Sales,fill=Publisher))+
+ggplot(head(arrange_by_rev3,10),aes(Publisher,Global_Sales,fill="blue"))+
   geom_bar(stat="identity")+
   coord_flip()+
   labs(x="Platform",y="Average Game sales in Millions")+#Flipping the axis to it is more readable
@@ -151,12 +150,12 @@ ggplot(head(top_games_by_publisher,15),aes(Name,Global_Sales,fill=Publisher))+
 
 #What effect the parent safety ratings have on sales?
 ggplot(subset(dat,Rating %in% c("E","E10+","T","M")),
-  aes(Rating,Global_Sales,fill=Rating))+
+  aes(Rating,Global_Sales,fill="green"))+
   geom_bar(stat="identity")+
   theme(legend.position="none")+
   xlab("ESRB Rating")+
   ylab("Global Sales")+
-  ggtitle("Global Sales by Rating (color by publisher)")
+  ggtitle("Global Sales by Rating")
 
 #That's enough visualization.  Lets build the model
 
@@ -177,7 +176,7 @@ I ran into issues while building, I did not have a powerful enough machine to us
 6. Test gml with the test set to measure accuracy 
 
 ```{r prediction model}
-
+set.seed(1)
 #Create training and test partitions 
 index <- createDataPartition(y=dat$Global_Sales, p=0.8, list=FALSE) 
 train <- dat[index,]
@@ -207,6 +206,8 @@ rmse_results <- bind_rows(rmse_results,
                           data_frame(method="ESRB Rating Effect Model",
                                      RMSE = model_1_rmse ))
 rmse_results %>% knitr::kable()
+#I first approached this model using the lm() function to create a linear model with multiple predictors but ran into endless errors and dead ends.  evenutally I decided to change my approach and used this method which creates much larger datasets and evenually ran into computational limits.  for the purposes of this project I am happy with this analysis. 
+
 #This is how I would have continued to test and tune the model but I received this error:
   #Error: Evaluation error: cannot allocate vector of size 3.4 Gb. and it crashed my computer.
   #I do not know of a less memory intensive way of continuing this method...
@@ -261,6 +262,8 @@ rmse_results %>% knitr::kable()
 ```
 
 ##Conclusion
+I would have expected high critic ratings, ESRB rated "E" games to sell significantly more copies of a game but according to this analysis that is not the case.
 
 This data suggests that you can directionally predict global sales of a videogame but the medium appeals to people differently and it is difficult to do with any certainty.
+
 Thank you for the great opportunity to learn about data science and machine learning I have enjoyed these courses. This report was a great way to apply the lessons from those courses.
