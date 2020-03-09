@@ -31,6 +31,7 @@ library(dplyr) # need for parts of the model
 library(caret) # Backbone of the model
 library(plyr) # for splitting the data into Partition
 library(glmnet) # the statisital method for the model
+library(RCurl)
 
 #load data from csv
 dat<-read.csv(file="Video_Games_Sales_as_at_22_Dec_2016.csv",stringsAsFactors=FALSE)
@@ -203,8 +204,7 @@ rmse_results <- bind_rows(rmse_results,
                           data_frame(method="ESRB Rating Effect Model",
                                      RMSE = model_1_rmse ))
 rmse_results %>% knitr::kable()
-#I first approached this model using the lm() function to create a linear model with multiple predictors but ran into endless errors and dead ends.  evenutally I decided to change my approach and used this method which creates much larger datasets and evenually ran into computational limits.  for the purposes of this project I am happy with this analysis. 
-
+#I first approached this model using the lm() function to create a linear model with multiple predictors but ran into endless errors and dead ends.  eventually I decided to change my approach and used this method which creates much larger datasets and ran into computational limits.  for the purposes of this project I am happy with this analysis. 
 #This is how I would have continued to test and tune the model but I received this error:
   #Error: Evaluation error: cannot allocate vector of size 3.4 Gb. and it crashed my computer.
   #I do not know of a less memory intensive way of continuing this method...
@@ -260,8 +260,13 @@ rmse_results %>% knitr::kable()
 #```
 
 ##Conclusion
+##Conclusion
 #I would have expected high critic ratings, ESRB rated "E" games to sell significantly more copies of a game but according to this analysis that is not the case.
 
 #This data suggests that you can directionally predict global sales of a videogame but the medium appeals to people differently and it is difficult to do with any certainty.
+
+#For a directional recommendation it seems that E-rated, party, music or learning, Nintendo games have historically been the highest selling individual games while games for Sony consoles collectively have sold the most. 
+
+#If I were consulting for a game studio on what types of game to make I would recommend making a game in the "Misc" type category because there are fewer of them but on average they sell a high number of copies. 
 
 #Thank you for the great opportunity to learn about data science and machine learning I have enjoyed these courses. This report was a great way to apply the lessons from those courses.
